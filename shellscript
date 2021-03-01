@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o errtrace
+set -o nounset
+set -o pipefail
+
+trap _cleanup SIGINT SIGTERM ERR EXIT
+
+readonly VERSION="0.1"
+
+HERE="$(
+  cd "$(dirname "$0")"
+  pwd -P
+)"
+
+command=
+
+main() {
+  _parse_params "$@"
+
+  case "$command" in
+  time)
+    date
+    ;;
+  esac
+}
+
+_print_usage() {
+  cat <<EOF
+usage: $(basename "$0") <subcommand> [arguments]
+
+subcommands:
+  time           Show current time
+
+optional arguments:
+  -h, --help     Show this help and exit
+  -v, --version  Print version and exit
+EOF
+}
+
+_parse_params() {
+  local param
+
+  while [[ $# -gt 0 ]]; do
+    param="$1"
+    shift
+
+    case $param in
+    time)
+      command="time"
+      ;;
+    -h | --help)
+      _print_usage
+      exit 0
+      ;;
+    -v | --version)
+      echo "$VERSION"
+      exit 0
+      ;;
+    -?*)
+      echo "error: unrecognized argument: $param"
+      exit 1
+      ;;
+    *)
+      echo "error: unrecognized subcommand: $param"
+      exit 1
+      ;;
+    esac
+  done
+
+  if [[ -z "$command" ]]; then
+    echo "error: no subcommand specified"
+    echo
+    _print_usage
+    exit 1
+  fi
+}
+
+_cleanup() {
+  :
+}
+
+main "$@"
